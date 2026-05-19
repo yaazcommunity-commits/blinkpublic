@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const features = [
   {
@@ -28,6 +28,11 @@ const features = [
 
 export default function HomePage() {
   const [prompt, setPrompt] = useState('');
+  const [year, setYear] = useState(2025);
+
+  useEffect(() => {
+    setYear(new Date()?.getFullYear());
+  }, []);
 
   return (
     <main className="min-h-screen flex flex-col">
@@ -107,7 +112,7 @@ export default function HomePage() {
       </section>
       {/* Footer */}
       <footer className="border-t border-border px-6 py-6 text-center text-sm text-muted-foreground">
-        © {new Date()?.getFullYear()} BuildAI. Built with Next.js & AI.
+        © {year} BuildAI. Built with Next.js & AI.
       </footer>
     </main>
   );
