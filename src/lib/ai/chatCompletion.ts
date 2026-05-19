@@ -1,69 +1,79 @@
 import { callAIEndpoint } from './aiClient';
 
+const ENDPOINT = '/api/ai/chat-completion';
+
 export async function getChatCompletion(
   provider: string,
   model: string,
-  messages: Array<{ role: string; content: unknown }>,
-  parameters: Record<string, unknown> = {}
+  messages: object[],
+  parameters: object = {}
 ) {
-  const response = await callAIEndpoint('/api/generate', {
+  return callAIEndpoint(ENDPOINT, {
     provider,
     model,
     messages,
     stream: false,
     parameters,
   });
-  return response.json();
 }
 
 export async function getStreamingChatCompletion(
   provider: string,
   model: string,
-  messages: Array<{ role: string; content: unknown }>,
-  onChunk: (chunk: unknown) => void,
+  messages: object[],
+  onChunk: (chunk: any) => void,
   onComplete: () => void,
   onError: (error: Error) => void,
-  parameters: Record<string, unknown> = {}
+  parameters: object = {}
 ) {
-  const response = await callAIEndpoint('/api/generate', {
-    provider,
-    model,
-    messages,
-    stream: true,
-    parameters,
-  });
-
-  const reader = response.body?.getReader();
-  if (!reader) {
-    onError(new Error('No response body'));
-    return;
-  }
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-
   try {
+    const response = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider, model, messages, stream: true, parameters }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || `HTTP error: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('Response body is not readable');
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+
       buffer += decoder.decode(value, { stream: true });
       const lines = buffer.split('\n');
       buffer = lines.pop() || '';
+
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (!data) continue;
           try {
-            const parsed = JSON.parse(data);
-            if (parsed.type === 'chunk') onChunk(parsed.chunk);
-            if (parsed.type === 'done') onComplete();
-            if (parsed.type === 'error') onError(new Error(parsed.error));
-          } catch {}
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'chunk' && data.chunk) {
+              onChunk(data.chunk);
+            } else if (data.type === 'done') onComplete();
+            else if (data.type === 'error') {
+              console.error('API Route Error:', {
+                error: data.error,
+                details: data.details,
+              });
+              onError(new Error(data.error));
+            }
+          } catch {
+            // Skip invalid JSON
+          }
         }
       }
     }
-    onComplete();
-  } catch (err) {
-    onError(err instanceof Error ? err : new Error('Stream error'));
+  } catch (error) {
+    console.error('Streaming error:', error);
+    onError(error instanceof Error ? error : new Error('Streaming error'));
   }
 }

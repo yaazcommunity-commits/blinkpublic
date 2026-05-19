@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { completion } from '@rocketnew/llm-sdk';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,27 +21,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { LLMClient } = require('@rocketnew/llm-sdk');
-    const client = new LLMClient({ gemini: apiKey });
-
     if (stream) {
       const encoder = new TextEncoder();
+
+      const streamResponse = await completion({
+        model,
+        messages,
+        stream: true,
+        api_key: apiKey,
+        ...parameters,
+      });
 
       const readableStream = new ReadableStream({
         async start(controller) {
           try {
             controller.enqueue(encoder.encode('data: {"type":"start"}\n\n'));
 
-            const streamResponse = await client.chat.completions.create({
-              provider,
-              model,
-              messages,
-              stream: true,
-              ...parameters,
-            });
-
-            for await (const chunk of streamResponse) {
+            for await (const chunk of streamResponse as unknown as AsyncIterable<unknown>) {
               const data = JSON.stringify({ type: 'chunk', chunk });
               controller.enqueue(encoder.encode(`data: ${data}\n\n`));
             }
@@ -64,11 +61,11 @@ export async function POST(request: NextRequest) {
         },
       });
     } else {
-      const response = await client.chat.completions.create({
-        provider,
+      const response = await completion({
         model,
         messages,
         stream: false,
+        api_key: apiKey,
         ...parameters,
       });
 
