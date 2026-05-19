@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #0f0f13;
+    --foreground: #f0f0f5;
+    --primary: #6366f1;
+    --primary-foreground: #ffffff;
+    --secondary: #1e1e2e;
+    --secondary-foreground: #a0a0b0;
+    --accent: #8b5cf6;
+    --accent-foreground: #ffffff;
+    --muted: #1a1a28;
+    --muted-foreground: #6b6b80;
+    --card: #16161f;
+    --card-foreground: #e8e8f0;
+    --border: #2a2a3a;
+    --input: #1e1e2e;
+    --ring: #6366f1;
+    --radius: 0.5rem;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+}
