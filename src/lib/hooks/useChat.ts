@@ -31,7 +31,9 @@ export function useChat(provider: string, model: string, streaming: boolean = fa
             messages,
             (chunk) => {
               chunks.push(chunk);
-              const delta = (chunk as ChatResponse)?.choices?.[0]?.delta?.content || '';
+              // SDK streaming chunk: { id, choices: [{ delta: { content } }] }
+              const chunkObj = chunk as { choices?: Array<{ delta?: { content?: string } }> };
+              const delta = chunkObj?.choices?.[0]?.delta?.content || '';
               accumulated += delta;
               setResponse(accumulated);
               setFullResponse([...chunks]);

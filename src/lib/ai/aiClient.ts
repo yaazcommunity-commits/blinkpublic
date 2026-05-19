@@ -6,13 +6,16 @@ export async function callAIEndpoint(endpoint: string, payload: Record<string, u
   });
 
   if (!response.ok) {
-    let details = '';
+    let errorMessage = `API error: ${response.status} ${response.statusText}`;
     try {
       const err = await response.json();
-      details = err.details || err.error || '';
+      const detail = err.details || err.error?.message || err.error || err.message || '';
+      if (detail && typeof detail === 'string') {
+        errorMessage = detail;
+      }
     } catch {}
-    const error = new Error(`API Route Error: ${response.status}`);
-    console.error('API Route Error:', { error, details });
+    const error = new Error(errorMessage);
+    console.error('API Route Error:', errorMessage);
     throw error;
   }
 
