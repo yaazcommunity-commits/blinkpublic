@@ -1,6 +1,6 @@
 import { callAIEndpoint } from './aiClient';
 
-const ENDPOINT = '/api/ai/chat-completion';
+const ENDPOINT = '/api/generate';
 
 export async function getChatCompletion(
   provider: string,
