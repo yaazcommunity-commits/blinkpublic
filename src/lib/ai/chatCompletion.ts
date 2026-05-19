@@ -6,7 +6,7 @@ export async function getChatCompletion(
   messages: Array<{ role: string; content: unknown }>,
   parameters: Record<string, unknown> = {}
 ) {
-  const response = await callAIEndpoint('/api/ai/chat-completion', {
+  const response = await callAIEndpoint('/api/generate', {
     provider,
     model,
     messages,
@@ -25,7 +25,7 @@ export async function getStreamingChatCompletion(
   onError: (error: Error) => void,
   parameters: Record<string, unknown> = {}
 ) {
-  const response = await callAIEndpoint('/api/ai/chat-completion', {
+  const response = await callAIEndpoint('/api/generate', {
     provider,
     model,
     messages,
